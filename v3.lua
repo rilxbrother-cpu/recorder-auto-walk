@@ -84,19 +84,13 @@ local recordBtn = makeButton("● RECORD", 38, Color3.fromRGB(200, 50, 50), func
 end)
 
 -- Tombol PLAYBACK
-local playBtn = makeButton("▶ PLAYBACK", 80, Color3.fromRGB(100, 200, 100), function()
+local function playback()
     if isRecording or isPlaying then return end
-    if #recordedPath == 0 then
-        status.Text = "❌ No data!"
-        status.TextColor3 = Color3.fromRGB(255, 100, 100)
-        return
-    end
+    if #recordedPath == 0 then return end
     
     isPlaying = true
     playBtn.Text = "▶ PLAYING..."
-    playBtn.BackgroundColor3 = Color3.fromRGB(150, 255, 150)
-    status.Text = "▶ Playing " .. #recordedPath .. " frames"
-    status.TextColor3 = Color3.fromRGB(100, 200, 255)
+    status.Text = "▶ Playing..."
     
     task.spawn(function()
         local char = player.Character
@@ -108,30 +102,24 @@ local playBtn = makeButton("▶ PLAYBACK", 80, Color3.fromRGB(100, 200, 100), fu
         hum.AutoRotate = true
         
         for i = 1, #recordedPath do
-            if not isPlaying or not root.Parent then break end
+            if not isPlaying then break end
+            if not root.Parent then break end
             
             local targetCF = recordedPath[i]
-            local moveDir = (targetCF.Position - root.Position)
             
-            -- Hadapin karakter ke arah gerakan
-            if moveDir.Magnitude > 1 then
-                root.CFrame = CFrame.new(root.Position, root.Position + moveDir.Unit)
-                hum:Move(moveDir.Unit, false)
-            end
+            -- Gerakin pake CFrame (pasti gerak)
+            root.CFrame = CFrame.new(targetCF.Position, targetCF.Position + targetCF.LookVector)
             
-            -- Tunggu sampe deket atau timeout
-            local elapsed = 0
-            local maxWait = recordInterval * 4
-            while (root.Position - targetCF.Position).Magnitude > 3 and elapsed < maxWait do
-                if not isPlaying or not root.Parent then break end
-                local dt = RunService.Heartbeat:Wait()
-                elapsed += dt
-                
-                local dir = (targetCF.Position - root.Position)
+            -- Panggil Move buat animasi (arah gerakan)
+            if i < #recordedPath then
+                local nextPos = recordedPath[i + 1].Position
+                local dir = (nextPos - targetCF.Position)
                 if dir.Magnitude > 0.5 then
                     hum:Move(dir.Unit, false)
                 end
             end
+            
+            task.wait(recordInterval)
         end
         
         if hum and hum.Parent then
@@ -142,10 +130,8 @@ local playBtn = makeButton("▶ PLAYBACK", 80, Color3.fromRGB(100, 200, 100), fu
         playBtn.Text = "▶ PLAYBACK"
         playBtn.BackgroundColor3 = Color3.fromRGB(100, 200, 100)
         status.Text = "✅ Done!"
-        status.TextColor3 = Color3.fromRGB(100, 255, 100)
     end)
-end)
-
+end
 -- Tombol STOP PLAYBACK
 local stopBtn = makeButton("■ STOP PLAYBACK", 122, Color3.fromRGB(200, 100, 50), function()
     if not isPlaying then
