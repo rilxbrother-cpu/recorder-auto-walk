@@ -14,7 +14,7 @@ local rootPart = character:WaitForChild("HumanoidRootPart")
 local recordedPath = {}
 local isRecording = false
 local isPlaying = false
-local recordInterval = 0.05
+local recordInterval = 0.03
 local recordTimer = 0
 
 -- ============================================
