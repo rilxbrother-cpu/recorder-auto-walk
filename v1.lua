@@ -138,46 +138,44 @@ local function playback()
     status.TextColor3 = Color3.fromRGB(100, 200, 255)
     
     task.spawn(function()
-        for i, cf in ipairs(recordedPath) do
-            if not humanoid.Parent or not isPlaying then break end
+        local RunService = game:GetService("RunService")
+        local char = player.Character
+        if not char then return end
+        local root = char:FindFirstChild("HumanoidRootPart")
+        local hum = char:FindFirstChild("Humanoid")
+        if not root or not hum then return end
+        
+        -- Set humanoid supaya pake Physics biar animasi jalan
+        hum.PlatformStand = false
+        
+        for i = 1, #recordedPath - 1 do
+            if not isPlaying or not root.Parent then break end
             
-            -- Kalo karakter jauh dari target, pake MoveTo
-            local distance = (rootPart.Position - cf.Position).Magnitude
+            local currentCF = recordedPath[i]
+            local nextCF = recordedPath[i + 1]
+            local duration = recordInterval
+            local startTime = tick()
             
-            if distance > 3 then
-                humanoid:MoveTo(cf.Position)
+            -- Interpolasi halus antar dua frame
+            while tick() - startTime < duration do
+                if not isPlaying or not root.Parent then break end
+                local alpha = (tick() - startTime) / duration
+                if alpha > 1 then alpha = 1 end
                 
-                -- Tunggu sampe nyampe atau timeout
-                local waited = 0
-                while (rootPart.Position - cf.Position).Magnitude > 2 and waited < 30 do
-                    task.wait(0.05)
-                    waited += 1
-                    if not isPlaying then break end
-                end
-            else
-                -- Kalo deket, langsung set CFrame biar presisi
-                rootPart.CFrame = CFrame.new(cf.Position) * CFrame.Angles(cf:ToEulerAnglesXYZ())
-                task.wait(recordInterval)
+                -- Lerp posisi + rotasi
+                local newPos = currentCF.Position:Lerp(nextCF.Position, alpha)
+                local newRot = currentCF:Lerp(nextCF, alpha)
+                root.CFrame = CFrame.new(newPos, newPos + newRot.LookVector)
+                
+                RunService.Heartbeat:Wait()
             end
         end
         
-        humanoid:MoveTo(rootPart.Position) -- Stop
         isPlaying = false
         status.Text = "Done!"
         status.TextColor3 = Color3.fromRGB(100, 255, 100)
     end)
 end
-
--- ============================================
--- EVENT
--- ============================================
-recordBtn.MouseButton1Click:Connect(function()
-    if isRecording then stopRecording() else startRecording() end
-end)
-
-copyBtn.MouseButton1Click:Connect(copyJSON)
-playBtn.MouseButton1Click:Connect(playback)
-
 -- ============================================
 -- LOOP RECORD
 -- ============================================
