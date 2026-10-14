@@ -84,12 +84,16 @@ local recordBtn = makeButton("● RECORD", 38, Color3.fromRGB(200, 50, 50), func
 end)
 
 -- Tombol PLAYBACK
-local function playback()
+local playBtn = makeButton("▶ PLAYBACK", 80, Color3.fromRGB(100, 200, 100), function()
     if isRecording or isPlaying then return end
-    if #recordedPath == 0 then return end
+    if #recordedPath == 0 then
+        status.Text = "❌ No data!"
+        return
+    end
     
     isPlaying = true
     playBtn.Text = "▶ PLAYING..."
+    playBtn.BackgroundColor3 = Color3.fromRGB(150, 255, 150)
     status.Text = "▶ Playing..."
     
     task.spawn(function()
@@ -106,11 +110,8 @@ local function playback()
             if not root.Parent then break end
             
             local targetCF = recordedPath[i]
-            
-            -- Gerakin pake CFrame (pasti gerak)
             root.CFrame = CFrame.new(targetCF.Position, targetCF.Position + targetCF.LookVector)
             
-            -- Panggil Move buat animasi (arah gerakan)
             if i < #recordedPath then
                 local nextPos = recordedPath[i + 1].Position
                 local dir = (nextPos - targetCF.Position)
@@ -131,7 +132,7 @@ local function playback()
         playBtn.BackgroundColor3 = Color3.fromRGB(100, 200, 100)
         status.Text = "✅ Done!"
     end)
-end
+end)
 -- Tombol STOP PLAYBACK
 local stopBtn = makeButton("■ STOP PLAYBACK", 122, Color3.fromRGB(200, 100, 50), function()
     if not isPlaying then
