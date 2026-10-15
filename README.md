@@ -1,2 +1,2 @@
 # recorder-auto-walk
-beta
+beta-
